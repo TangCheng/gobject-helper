@@ -1,0 +1,135 @@
+#!/bin/bash
+#
+# SCRIPT: addclass
+# AUTHOR: 唐成
+# DATE:   2014/05/25
+# REV:    1.0.D (Valid are A, B, D, T, Q, and P)
+#               (For Alpha, Beta, Dev, Test, QA, and Production)
+#
+# PLATFORM: Linux Ubuntu
+#
+# PURPOSE: Add class based on GObject from template。
+# 
+#
+# REV LIST:
+#        DATE: 2014/05/25
+#        BY:   唐成
+#        MODIFICATION: 初次创建。
+#
+#
+# set -n   # Uncomment to check script syntax, without execution.
+#          # NOTE: Do not forget to put the # comment back in or
+#          #       the shell script will never execute!
+# set -x   # Uncomment to debug this shell script
+#
+##########################################################
+#         DEFINE FILES AND VARIABLES HERE
+##########################################################
+
+this_script=$(basename $0)
+src_dir=$(dirname $0)"/../templates"
+target_dir=$(readlink -f .)
+class_name=""
+class_name_camelize=""
+class_name_uppercase=""
+namespace=""
+namespace_camelize=""
+namespace_uppercase=""
+with_private=false
+
+##########################################################
+#              DEFINE FUNCTIONS HERE
+##########################################################
+
+function usage
+{
+	echo -e "\nUsage: $this_script <name> <namespace> [target-dir] [with-private]"
+	echo -e "\tname:         class name."
+	echo -e "\tnamespace:    namespace of the class."
+	echo -e "\ttarget-dir:   target directory to storage class file, it is a relative path."
+	echo -e "\twith-private: boolean, indicate the class have private members or not."
+	exit 0
+}
+
+function strip_all
+{
+	rm nvr_lib_files/*.a
+    rm nvr_lib_files/*.la
+    find nvr_lib_files | xargs strip
+}
+
+##########################################################
+#               BEGINNING OF MAIN
+##########################################################
+
+case $# in
+    0)
+	usage
+	;;
+    1)
+	usage
+	;;
+    2)
+	class_name=$1
+    namespace=$2
+	;;
+	3)
+	class_name=$1
+    namespace=$2
+    target_dir=$target_dir"/"$3
+	;;
+	4)
+    class_name=$1
+    namespace=$2
+    target_dir=$target_dir"/"$3
+    with_private=$4
+	;;
+    *)
+	;;
+esac
+
+class_name=${class_name,,}
+class_name_camelize=$(echo $class_name | sed -e "s/_\(\w\)/\u\1/g" -e "s/^[[:alnum:]]/\u&/")
+class_name_uppercase=${class_name^^}
+namespace=${namespace,,}
+namespace_camelize=$(echo $namespace | sed -e "s/_\(\w\)/\u\1/g" -e "s/^[[:alnum:]]/\u&/")
+namespace_uppercase=${namespace^^}
+
+#echo -e $src_dir
+#echo -e $target_dir
+#echo -e $class_name
+#echo -e $class_name_camelize
+#echo -e $class_name_uppercase
+#echo -e $namespace
+#echo -e $namespace_camelize
+#echo -e $namespace_uppercase
+
+if [ x"$with_private" = xtrue ]; then
+	src_h_file=${src_dir}"/gobject_class_with_private_h.template"
+	src_c_file=${src_dir}"/gobject_class_with_private_c.template"
+else
+	src_h_file=${src_dir}"/gobject_class_h.template"
+	src_c_file=${src_dir}"/gobject_class_c.template"
+fi
+target_h_file=${target_dir}"/"${class_name}".h"
+target_c_file=${target_dir}"/"${class_name}".c"
+
+cp $src_h_file $target_h_file
+cp $src_c_file $target_c_file
+
+sed -e "s/[{]PREFIX-LOWERCASE[}]/$namespace/g" \
+	-e "s/[{]PREFIX-UPPERCASE[}]/$namespace_uppercase/g" \
+	-e "s/[{]PREFIX-CAMELIZE[}]/$namespace_camelize/g" \
+	-e "s/[{]NAME[}]/$class_name/g" \
+	-e "s/[{]NAME-UPPERCASE[}]/$class_name_uppercase/g" \
+	-e "s/[{]NAME-CAMELIZE[}]/$class_name_camelize/g" \
+	-i $target_h_file
+sed -e "s/[{]PREFIX-LOWERCASE[}]/$namespace/g" \
+	-e "s/[{]PREFIX-UPPERCASE[}]/$namespace_uppercase/g" \
+	-e "s/[{]PREFIX-CAMELIZE[}]/$namespace_camelize/g" \
+	-e "s/[{]NAME[}]/$class_name/g" \
+	-e "s/[{]NAME-UPPERCASE[}]/$class_name_uppercase/g" \
+	-e "s/[{]NAME-CAMELIZE[}]/$class_name_camelize/g" \
+	-i $target_c_file
+
+# End of script
