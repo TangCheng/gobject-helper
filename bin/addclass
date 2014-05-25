@@ -51,13 +51,6 @@ function usage
 	exit 0
 }
 
-function strip_all
-{
-	rm nvr_lib_files/*.a
-    rm nvr_lib_files/*.la
-    find nvr_lib_files | xargs strip
-}
-
 ##########################################################
 #               BEGINNING OF MAIN
 ##########################################################
