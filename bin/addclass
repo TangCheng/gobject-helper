@@ -27,7 +27,9 @@
 ##########################################################
 
 this_script=$(basename $0)
-src_dir=$(dirname $0)"/../templates"
+real_script=$(readlink -f $0)
+src_dir=$(dirname $real_script)"/../templates"
+echo -e "$src_dir"
 target_dir=$(readlink -f .)
 class_name=""
 class_name_camelize=""
